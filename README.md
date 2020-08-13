@@ -15,4 +15,9 @@ make
 ```
   
 The project will be running on localhost at 8050:  
-[http://localhost:8050](http://localhost:8050)
+[http://localhost:8050](http://localhost:8050)  
+
+# NOTES:
+Your data should be located in the data/ directory to be loaded.  
+i.e.  
+dia_visualization/app/data/
