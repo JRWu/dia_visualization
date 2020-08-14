@@ -4,7 +4,7 @@ FROM python:3.8
 ENV DASH_DEBUG_MODE=True
 
 RUN set -ex && \
-    pip install dash dash-daq dash-bootstrap-components numpy pyteomics lxml
+    pip install dash dash-daq dash-bootstrap-components numpy pyteomics lxml pandas
 
 
 
