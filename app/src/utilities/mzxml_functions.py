@@ -38,6 +38,8 @@ def parse_mzxml_to_dataframe(mzxml_in):
     mzs = np.concatenate(all_mzs).ravel()
     its = np.concatenate(all_its).ravel()
 
+    its = its/its.max()
+
     alldata = pd.DataFrame({
         'rts': rts,
         'mzs': mzs,
@@ -45,3 +47,26 @@ def parse_mzxml_to_dataframe(mzxml_in):
     })
 
     return alldata
+
+
+def filter_dataframe(df, columns_minmax_dict):
+    """
+    Filter a given DataFrame based on the column:min_max values dict.
+
+    Args:
+        df: The DataFrame to be filtered.
+        columns_minmax_dict: Dictionary with format column_name:[min_value, max_value] structure.
+
+    Return:
+        Subsetted Pandas DataFrame
+    """
+
+    subsetted_df = df
+    # For each column to be filtered in the dictionary
+    for column in columns_minmax_dict:
+        minval = columns_minmax_dict[column][0]
+        maxval = columns_minmax_dict[column][1]
+
+        # Subset the respective column & values
+        subsetted_df = subsetted_df.loc[(df[column] >= minval) & (subsetted_df[column] <= maxval)]
+    return subsetted_df

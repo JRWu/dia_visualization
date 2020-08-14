@@ -1,5 +1,6 @@
 # dia_visualization
-A repository housing tools for data visualization.
+A repository housing tools for data visualization.  
+The display is based on [Plotly | DASH](https://dash.plotly.com/), a Pythonic framework using Flask, Plotly.js and React.js.   
 
 # Quickstart
 Clone the repository and navigate to the directory.  
