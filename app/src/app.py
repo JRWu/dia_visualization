@@ -129,11 +129,31 @@ def display_click_data(clickData):
 
 @app.callback(
     Output('intensity_out', 'children'),
-    [Input('intensity_max_filter', 'value')])
-def update_intensity_out(intensity_out_max):
-    # Preserve minimum, update maximum
-    filters['its'] = [filters['its'][0], intensity_out_max]
+    [Input('intensity_min_filter', 'value'),
+     Input('intensity_max_filter', 'value')
+     ])
+def update_intensity_out(intensity_out_min, intensity_out_max):
+    filters['its'] = [intensity_out_min, intensity_out_max]
     return json.dumps(filters['its'])
+
+@app.callback(
+    Output('mz_out', 'children'),
+    [Input('mz_min_filter', 'value'),
+     Input('mz_max_filter', 'value')
+     ])
+def update_mz_out(mz_out_min, mz_out_max):
+    filters['mzs'] = [mz_out_min, mz_out_max]
+    return json.dumps(filters['mzs'])
+
+@app.callback(
+    Output('rt_out', 'children'),
+    [Input('rt_min_filter', 'value'),
+     Input('rt_max_filter', 'value')
+     ])
+def update_mz_out(rt_out_min, rt_out_max):
+    filters['rts'] = [rt_out_min, rt_out_max]
+    return json.dumps(filters['rts'])
+
 
 
 @app.callback(
