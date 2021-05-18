@@ -14,6 +14,7 @@ import sys
 
 sys.path.append('/app/src')
 from utilities.mzxml_functions import *
+from utilities.csv_functions import *
 from style.plot_style import *
 
 server = flask.Flask(__name__)
@@ -35,10 +36,9 @@ styles = {
 }
 
 # Load mzXML data
-mzxml_in = '/app/data/toy.mzXML'
+mzxml_in = '/app/data/toy2.mzXML'
 alldata = parse_mzxml_to_dataframe(mzxml_in)
 global subdata
-
 
 ########## FILTER DEFINITION ##########
 ########## FILTER DEFINITION ##########
@@ -51,39 +51,56 @@ filters['its'] = [alldata['its'].min(), alldata['its'].max()]
 ########## FILTER DEFINITION END ######
 # filters_const is a constant version of the data in the original dataframe
 filters_const = filters.copy()
-filters_const['mzs'] = [alldata['mzs'].min(),  alldata['mzs'].max()]
-filters_const['rts'] = [alldata['rts'].min(),  alldata['rts'].max()]
-filters_const['its'] = [alldata['its'].min(),  alldata['its'].max()]
+filters_const['mzs'] = [alldata['mzs'].min(), alldata['mzs'].max()]
+filters_const['rts'] = [alldata['rts'].min(), alldata['rts'].max()]
+filters_const['its'] = [alldata['its'].min(), alldata['its'].max()]
+
 
 def update_alldata_from_filters():
     return filter_dataframe(alldata, filters)
 
+
 subdata = update_alldata_from_filters()
+
 
 # DATA LOAD
 def update_figure(subdata):
     z = np.linspace(0, 20, len(subdata))
-    fig = go.Figure(data=[go.Scatter3d(
+    scatter_trace = go.Scatter3d(
         x=subdata['rts'],
         y=subdata['mzs'],
         z=subdata['its'],
         mode='markers',
         marker=dict(
             size=2,
-            color=z,  # set color to an array/list of desired values
-            colorscale='Viridis',  # choose a colorscale
+            #            color=z,  # set color to an array/list of desired values
+            #            colorscale='Viridis',  # choose a colorscale
             opacity=0.8
         )
-    )]
     )
+
+    # TODO: REMOVE THE diaumpire_line_trace for prod
+    mzs = list([300, 301, 302, 303, 302])
+    rts = list([0.006410, 0.028481, 0.050527, 0.072575])
+    its = list([0.01, 0.05, 0.06, 0.04])
+    diaumpire_line_trace = go.Scatter3d(
+        x=rts,
+        y=mzs,
+        z=its,
+        mode='lines',
+        name='lines'
+    )
+
+    # TODO: REMOVE THE diaumpire_line_trace for prod
+    fig = go.Figure(data=[scatter_trace, diaumpire_line_trace]
+                    )
     # Define the plot labels
     fig.update_layout(scene=dict(
-        xaxis_title='RetentionTime (h)',
+        xaxis_title='RetentionTime (m)',
         yaxis_title='m/z',
         zaxis_title='Intensity')
     )
     return fig
-
 
 
 ##### FIGURE CREATION #####
@@ -96,17 +113,17 @@ app.layout = html.Div(children=[
     ]),
     html.Div(children=[
         html.Div(filter_mz(filters['mzs'][0], filters['mzs'][1])),
-        html.P('m/z Range: [' + str(filters_const['mzs'][0]) + ', '+ str(filters_const['mzs'][1]) +']')
+        html.P('m/z Range: [' + str(filters_const['mzs'][0]) + ', ' + str(filters_const['mzs'][1]) + ']')
     ]),
     html.Div(children=[
         html.Div(filter_retention_time(filters['rts'][0], filters['rts'][1])),
-        html.P('RT Range (h): [' + str(filters_const['rts'][0]) + ', '+ str(filters_const['rts'][1]) +']')
+        html.P('RT Range (h): [' + str(filters_const['rts'][0]) + ', ' + str(filters_const['rts'][1]) + ']')
     ]),
-    html.Button('Update Graph', id='update_graph'),
+    html.Button('Render Graph', id='update_graph'),
     dcc.Graph(
         id='3d_mzxml_plot',
         figure=update_figure(subdata),
-        style={'width': '100%', 'height': '90vh'}
+        style={'width': '100%', 'height': '300vh'}
     ),
     html.Div([
         dcc.Markdown("""
@@ -136,6 +153,7 @@ def update_intensity_out(intensity_out_min, intensity_out_max):
     filters['its'] = [intensity_out_min, intensity_out_max]
     return json.dumps(filters['its'])
 
+
 @app.callback(
     Output('mz_out', 'children'),
     [Input('mz_min_filter', 'value'),
@@ -145,6 +163,7 @@ def update_mz_out(mz_out_min, mz_out_max):
     filters['mzs'] = [mz_out_min, mz_out_max]
     return json.dumps(filters['mzs'])
 
+
 @app.callback(
     Output('rt_out', 'children'),
     [Input('rt_min_filter', 'value'),
@@ -153,7 +172,6 @@ def update_mz_out(mz_out_min, mz_out_max):
 def update_mz_out(rt_out_min, rt_out_max):
     filters['rts'] = [rt_out_min, rt_out_max]
     return json.dumps(filters['rts'])
-
 
 
 @app.callback(

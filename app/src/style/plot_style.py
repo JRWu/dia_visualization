@@ -55,7 +55,7 @@ def filter_retention_time(minval=0, maxval=100):
             id="rt_min_filter",
             type="number",
             debounce=True,
-            placeholder="Min RT (h): " + str(minval),
+            placeholder="Min RT (m): " + str(minval),
             value=minval,
             min=minval
         ),
@@ -63,7 +63,7 @@ def filter_retention_time(minval=0, maxval=100):
             id="rt_max_filter",
             type="number",
             debounce=True,
-            placeholder="Max RT (h): " + str(maxval),
+            placeholder="Max RT (m): " + str(maxval),
             value=maxval,
             max=maxval
         ),
