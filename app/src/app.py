@@ -33,7 +33,7 @@ styles = {
 
 trail_in = '/app/data/11_window.tsv'
 trail_df = pd.read_table(trail_in)
-target_rt = 47.724666666666664
+target_rt = 19.6974904458599
 rt_tolerance = 0.16
 
 trail_df_subset = subset_trails_by_rt(trail_df, target_rt, rt_tolerance)
@@ -78,7 +78,7 @@ generate_traces_from_frgions(frgions, trail_df_subset, fig)
 app = dash.Dash()
 app.layout = html.Div([
     html.H2(children='Trail + Peptide PSM Visualization'),
-    dcc.Input(id="peptide_sequence", placeholder="AEAGDNLGALVR", value="AEAGDNLGALVR", debounce=True),
+    dcc.Input(id="peptide_sequence", placeholder="SGGGGGGGGSSWGGR", value="SGGGGGGGGSSWGGR", debounce=True),
     html.Br(),
     dcc.Input(id="rt_in", placeholder="19.6974904458599", value="19.6974904458599", debounce=True),
     dcc.Graph(id="peak_scatterplot",
