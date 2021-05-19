@@ -5,16 +5,13 @@ import dash_core_components as dcc
 import dash_html_components as html
 import flask
 import plotly.graph_objs as go
-import json
-import os
-
-import numpy as np
-
 import sys
 
 sys.path.append('/app/src')
 from utilities.mzxml_functions import *
+from utilities.trail_functions import *
 from style.plot_style import *
+from utilities.peptide_functions import *
 
 server = flask.Flask(__name__)
 app = dash.Dash(
@@ -34,10 +31,81 @@ styles = {
     }
 }
 
+trail_in = '/app/data/11_window.tsv'
+trail_df = pd.read_table(trail_in)
+target_rt = 20.0
+rt_tolerance = 0.16
+
+trail_df_subset = subset_trails_by_rt(trail_df, target_rt, rt_tolerance)
+trail_df_subset = split_internal_columns(trail_df_subset)
+trail_df_subset = trail_df_subset.apply(expand_lists, axis=1)
+trail_df_subset = pd.concat(trail_df_subset.tolist())
+
+fig = go.Figure(data=[go.Scatter3d(
+    x=trail_df_subset['rts'].astype(float),
+    y=trail_df_subset['mzs'].astype(float),
+    z=trail_df_subset['ints'].astype(float),
+    mode='markers',
+    marker=dict(
+        size=1.5,
+        opacity=0.75
+    ),
+    showlegend=True,
+    name="Peaks"
+)])
+# Define the plot labels
+fig.update_layout(scene=dict(
+    xaxis_title='RetentionTime (min)',
+    yaxis_title='m/z',
+    zaxis_title='Intensity',
+    xaxis_range=[min(trail_df_subset['rts'].astype(float)), max(trail_df_subset['rts'].astype(float))],
+    yaxis_range=[min(trail_df_subset['mzs'].astype(float)), max(trail_df_subset['mzs'].astype(float))],
+    zaxis_range=[min(trail_df_subset['ints'].astype(float)), max(trail_df_subset['ints'].astype(float))],
+    uirevision=True  # Prevent graph update
+))
+
+##### Compute the Fragment Ion Traces here
+
+global peptide_in
+peptide_in = "SGGGGGGGGSSWGGR"
+frgions = fragments(peptide_in)
+generate_traces_from_frgions(frgions, trail_df_subset, fig)
+
+
+##### Given some input peptide, we want to plot the PSM for each fragment ion & label it
+
+
+app = dash.Dash()
+app.layout = html.Div([
+    html.H2(children='Trail + Peptide PSM Visualization'),
+    dcc.Input(id="peptide_in", placeholder="SGGGGGGGGSSWGGR", value="SGGGGGGGGSSWGGR", debounce=True),
+    html.Br(),
+    dcc.Input(id="rt_in", placeholder="19.6974904458599", value="19.6974904458599", debounce=True),
+    dcc.Graph(id="peak_scatterplot",
+        figure=fig,
+              style={'width': '100%', 'height': '100vh'}
+              ),
+    html.Div(id='my-output'),
+])
+
+"""
+########## CALLBACK DEFINITION ##########
+@app.callback(
+    Output(component_id='peak_scatterplot', component_property='figure'),
+    Input(component_id='peptide_in', component_property='value')
+)
+def update_peptide_in(input_value):
+    peptide_in=input_value
+    frgions = fragments(peptide_in)
+    return generate_traces_from_frgions(frgions, trail_df_subset, fig)
+"""
+
+"""
 # Load mzXML data
 mzxml_in = '/app/data/toy.mzXML'
 alldata = parse_mzxml_to_dataframe(mzxml_in)
 global subdata
+
 
 
 ########## FILTER DEFINITION ##########
@@ -110,66 +178,66 @@ app.layout = html.Div(children=[
     ),
     html.Div([
         dcc.Markdown("""
-            **Click Data**
-            Click on points in the graph.
-        """),
-        html.Pre(id='click-data', style=styles['pre']),
-    ], className='three columns'),
+# **Click Data**
+# Click on points in the graph.
+"""),
+html.Pre(id='click-data', style=styles['pre']),
+], className='three columns'),
 ])
 
 
 ########## DEFINE CALLBACKS ##########
 ########## DEFINE CALLBACKS ##########
 @app.callback(
-    Output('click-data', 'children'),
-    [Input('3d_mzxml_plot', 'clickData')])
+Output('click-data', 'children'),
+[Input('3d_mzxml_plot', 'clickData')])
 def display_click_data(clickData):
-    return json.dumps(clickData, indent=2)
+return json.dumps(clickData, indent=2)
 
 
 @app.callback(
-    Output('intensity_out', 'children'),
-    [Input('intensity_min_filter', 'value'),
-     Input('intensity_max_filter', 'value')
-     ])
+Output('intensity_out', 'children'),
+[Input('intensity_min_filter', 'value'),
+Input('intensity_max_filter', 'value')
+])
 def update_intensity_out(intensity_out_min, intensity_out_max):
-    filters['its'] = [intensity_out_min, intensity_out_max]
-    return json.dumps(filters['its'])
+filters['its'] = [intensity_out_min, intensity_out_max]
+return json.dumps(filters['its'])
 
 @app.callback(
-    Output('mz_out', 'children'),
-    [Input('mz_min_filter', 'value'),
-     Input('mz_max_filter', 'value')
-     ])
+Output('mz_out', 'children'),
+[Input('mz_min_filter', 'value'),
+Input('mz_max_filter', 'value')
+])
 def update_mz_out(mz_out_min, mz_out_max):
-    filters['mzs'] = [mz_out_min, mz_out_max]
-    return json.dumps(filters['mzs'])
+filters['mzs'] = [mz_out_min, mz_out_max]
+return json.dumps(filters['mzs'])
 
 @app.callback(
-    Output('rt_out', 'children'),
-    [Input('rt_min_filter', 'value'),
-     Input('rt_max_filter', 'value')
-     ])
+Output('rt_out', 'children'),
+[Input('rt_min_filter', 'value'),
+Input('rt_max_filter', 'value')
+])
 def update_mz_out(rt_out_min, rt_out_max):
-    filters['rts'] = [rt_out_min, rt_out_max]
-    return json.dumps(filters['rts'])
+filters['rts'] = [rt_out_min, rt_out_max]
+return json.dumps(filters['rts'])
 
 
 
 @app.callback(
-    Output('3d_mzxml_plot', 'figure'),
-    [Input('update_graph', 'n_clicks')])
+Output('3d_mzxml_plot', 'figure'),
+[Input('update_graph', 'n_clicks')])
 def update_graph(n_clicks):
-    subdata = update_alldata_from_filters()
-    fig = update_figure(subdata)
-    return fig
+subdata = update_alldata_from_filters()
+fig = update_figure(subdata)
+return fig
 
+"""
 
 if __name__ == '__main__':
-    debug = False if os.environ['DASH_DEBUG_MODE'] == 'False' else True
-
     app.run_server(
         host='0.0.0.0',
         port=8050,
-        debug=debug
+        debug=True,
+        use_reloader=True
     )
