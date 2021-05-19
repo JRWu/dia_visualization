@@ -2,6 +2,7 @@
 from pyteomics import mass
 import plotly.graph_objs as go
 
+
 def fragments(peptide, types=('b', 'y'), maxcharge=1):
     """
     The function generates all possible m/z for fragments of types
@@ -21,6 +22,7 @@ def fragments(peptide, types=('b', 'y'), maxcharge=1):
                         peptide[i:], ion_type=ion_type, charge=charge)
                     frgion_dict['y' + str(i)] = ymass
     return frgion_dict
+
 
 def generate_traces_from_frgions(frgions, trail_df_subset, fig):
     # Clear prior traces but keep the peaks.
@@ -45,4 +47,5 @@ def generate_traces_from_frgions(frgions, trail_df_subset, fig):
                     text=key,
                     name=key)
             )
+            fig['layout']['uirevision'] = 'STATIC'
     return fig

@@ -33,7 +33,7 @@ styles = {
 
 trail_in = '/app/data/11_window.tsv'
 trail_df = pd.read_table(trail_in)
-target_rt = 20.0
+target_rt = 47.724666666666664
 rt_tolerance = 0.16
 
 trail_df_subset = subset_trails_by_rt(trail_df, target_rt, rt_tolerance)
@@ -51,7 +51,8 @@ fig = go.Figure(data=[go.Scatter3d(
         opacity=0.75
     ),
     showlegend=True,
-    name="Peaks"
+    name="Peaks",
+    uirevision='STATIC'  # Prevent graph update
 )])
 # Define the plot labels
 fig.update_layout(scene=dict(
@@ -61,16 +62,15 @@ fig.update_layout(scene=dict(
     xaxis_range=[min(trail_df_subset['rts'].astype(float)), max(trail_df_subset['rts'].astype(float))],
     yaxis_range=[min(trail_df_subset['mzs'].astype(float)), max(trail_df_subset['mzs'].astype(float))],
     zaxis_range=[min(trail_df_subset['ints'].astype(float)), max(trail_df_subset['ints'].astype(float))],
-    uirevision=True  # Prevent graph update
+    uirevision='STATIC'  # Prevent graph update
 ))
 
 ##### Compute the Fragment Ion Traces here
 
-global peptide_in
-peptide_in = "SGGGGGGGGSSWGGR"
-frgions = fragments(peptide_in)
+global peptide_sequence
+peptide_sequence = "AEAGDNLGALVR"
+frgions = fragments(peptide_sequence)
 generate_traces_from_frgions(frgions, trail_df_subset, fig)
-
 
 ##### Given some input peptide, we want to plot the PSM for each fragment ion & label it
 
@@ -78,27 +78,56 @@ generate_traces_from_frgions(frgions, trail_df_subset, fig)
 app = dash.Dash()
 app.layout = html.Div([
     html.H2(children='Trail + Peptide PSM Visualization'),
-    dcc.Input(id="peptide_in", placeholder="SGGGGGGGGSSWGGR", value="SGGGGGGGGSSWGGR", debounce=True),
+    dcc.Input(id="peptide_sequence", placeholder="AEAGDNLGALVR", value="AEAGDNLGALVR", debounce=True),
     html.Br(),
     dcc.Input(id="rt_in", placeholder="19.6974904458599", value="19.6974904458599", debounce=True),
     dcc.Graph(id="peak_scatterplot",
-        figure=fig,
+              figure=fig,
               style={'width': '100%', 'height': '100vh'}
               ),
     html.Div(id='my-output'),
 ])
 
-"""
+
 ########## CALLBACK DEFINITION ##########
 @app.callback(
     Output(component_id='peak_scatterplot', component_property='figure'),
-    Input(component_id='peptide_in', component_property='value')
+    Input(component_id='peptide_sequence', component_property='value'),
+    Input(component_id='rt_in', component_property='value'),
 )
-def update_peptide_in(input_value):
-    peptide_in=input_value
-    frgions = fragments(peptide_in)
+def update_figure(peptide_sequence, rt_in):
+    peptide_sequence = peptide_sequence
+    rt_in = float(rt_in)
+    trail_df_subset = subset_trails_by_rt(trail_df, rt_in, rt_tolerance)
+    trail_df_subset = split_internal_columns(trail_df_subset)
+    trail_df_subset = trail_df_subset.apply(expand_lists, axis=1)
+    trail_df_subset = pd.concat(trail_df_subset.tolist())
+
+    fig = go.Figure(data=[go.Scatter3d(
+        x=trail_df_subset['rts'].astype(float),
+        y=trail_df_subset['mzs'].astype(float),
+        z=trail_df_subset['ints'].astype(float),
+        mode='markers',
+        marker=dict(
+            size=1.5,
+            opacity=0.75
+        ),
+        showlegend=True,
+        name="Peaks",
+        uirevision='STATIC'  # Prevent graph update
+    )])
+    fig.update_layout(scene=dict(
+        xaxis_title='RetentionTime (min)',
+        yaxis_title='m/z',
+        zaxis_title='Intensity',
+        xaxis_range=[min(trail_df_subset['rts'].astype(float)), max(trail_df_subset['rts'].astype(float))],
+        yaxis_range=[min(trail_df_subset['mzs'].astype(float)), max(trail_df_subset['mzs'].astype(float))],
+        zaxis_range=[min(trail_df_subset['ints'].astype(float)), max(trail_df_subset['ints'].astype(float))],
+        uirevision='STATIC'  # Prevent graph update
+    ))
+    frgions = fragments(peptide_sequence)
     return generate_traces_from_frgions(frgions, trail_df_subset, fig)
-"""
+
 
 """
 # Load mzXML data
