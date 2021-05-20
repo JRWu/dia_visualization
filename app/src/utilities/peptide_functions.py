@@ -45,7 +45,8 @@ def generate_traces_from_frgions(frgions, trail_df_subset, fig):
                     z=frgion_df_tmp['ints'].astype(float),
                     mode="lines",
                     text=key,
-                    name=key)
+                    name=key
+                )
             )
             fig['layout']['uirevision'] = 'STATIC'
     return fig

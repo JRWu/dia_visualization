@@ -48,7 +48,7 @@ fig = go.Figure(data=[go.Scatter3d(
     mode='markers',
     marker=dict(
         size=1.5,
-        opacity=0.75
+        opacity=0.7
     ),
     showlegend=True,
     name="Peaks",
@@ -68,7 +68,7 @@ fig.update_layout(scene=dict(
 ##### Compute the Fragment Ion Traces here
 
 global peptide_sequence
-peptide_sequence = "AEAGDNLGALVR"
+peptide_sequence = "SGGGGGGGGSSWGGR"
 frgions = fragments(peptide_sequence)
 generate_traces_from_frgions(frgions, trail_df_subset, fig)
 
@@ -78,9 +78,9 @@ generate_traces_from_frgions(frgions, trail_df_subset, fig)
 app = dash.Dash()
 app.layout = html.Div([
     html.H2(children='Trail + Peptide PSM Visualization'),
-    dcc.Input(id="peptide_sequence", placeholder="SGGGGGGGGSSWGGR", value="SGGGGGGGGSSWGGR", debounce=True),
+    dcc.Input(id="peptide_sequence", placeholder=peptide_sequence, value=peptide_sequence, debounce=True),
     html.Br(),
-    dcc.Input(id="rt_in", placeholder="19.6974904458599", value="19.6974904458599", debounce=True),
+    dcc.Input(id="rt_in", placeholder=target_rt, value=target_rt, debounce=True),
     dcc.Graph(id="peak_scatterplot",
               figure=fig,
               style={'width': '100%', 'height': '100vh'}
@@ -110,7 +110,7 @@ def update_figure(peptide_sequence, rt_in):
         mode='markers',
         marker=dict(
             size=1.5,
-            opacity=0.75
+            opacity=0.7
         ),
         showlegend=True,
         name="Peaks",
