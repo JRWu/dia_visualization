@@ -33,6 +33,7 @@ def generate_traces_from_frgions(frgions, trail_df_subset, fig):
             (abs(frgions[key] - trail_df_subset['mzs'].astype(float)) / frgions[key] * 1000000) < ppm]
         if not frgion_df_tmp.empty:
             idx = frgion_df_tmp['row'].unique()[0]
+#            frgion_df_tmp = trail_df_subset[trail_df_subset['row'].isin(idx)]
             frgion_df_tmp = trail_df_subset[trail_df_subset['row'] == idx]
             frgion_df_tmp['rts'] = frgion_df_tmp['rts'].astype(float)
             frgion_df_tmp['mzs'] = frgion_df_tmp['mzs'].astype(float)
