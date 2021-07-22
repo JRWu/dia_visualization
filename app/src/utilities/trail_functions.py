@@ -8,6 +8,9 @@ import pandas as pd
 #rt_tolerance = 0.16
 
 
+
+
+
 def subset_trails_by_rt(trail_df, target_rt, rt_tolerance):
     upper_rt = target_rt + rt_tolerance
     lower_rt = target_rt - rt_tolerance
@@ -46,3 +49,22 @@ expanded_df = trail_df_subset.apply(expand_lists, axis=1)
 indexed_trail_df = pd.concat(expanded_df.tolist())
 """
 
+def parse_isolation_windows(isolation_window_file):
+    """ Compute the Isolation Window ranges per window.
+    Args:
+        isolation_window_file: string file containing IsolationWindow.out information
+    Returns:
+        Dict containing the start/end window ranges
+    """
+    with open(isolation_window_file) as f:
+        read_data = f.read()
+    ranges = read_data.split('\n')
+    ranges = list(filter(lambda a: a != 'START', ranges))
+    ranges = list(filter(lambda a: a != 'END', ranges))
+    ranges = list(filter(lambda a: a != '', ranges))
+
+    iso_ranges = dict()
+    for idx, element in enumerate(ranges):
+        iso_ranges[float(element.split(' ')[0])] = float(element.split(' ')[1])
+
+    return iso_ranges
