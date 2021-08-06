@@ -37,15 +37,15 @@ styles = {
 
 ##### Read in the XIC and Result files ...
 iso_infile = '/app/data/isolationWindowRanges.out'
-xic_infile = '/app/data/sne_xic_experiment_xic.tsv'
-res_infile = '/app/data/sne_xic_experiment_result.tsv'
+xic_infile = '/app/data/r01_q01_xic_experiment_xic.tsv'
+res_infile = '/app/data/r01_q01_xic_experiment_result.tsv'
 xic_data = pd.read_csv(xic_infile, sep='\t', header=0)
 res_data = pd.read_csv(res_infile, sep="\t", header=0)
 
 ##### Read in ALL Trails
 trail_dir = '/app/data/'
 all_trails = dict()
-for window_idx in range(1,23):
+for window_idx in range(1, 23):
     print(window_idx)
     all_trails[str(window_idx)] = (pd.read_table(trail_dir + str(window_idx) + '_window.tsv'))
 
@@ -61,12 +61,11 @@ dropdown_options = list()
 # Format the list of dropdown options
 for index, row in res_data.iterrows():
     dropdown_options.append(
-        {'label' : row['peptide'], 'value': row['index']}
+        {'label': row['peptide'], 'value': row['index']}
     )
 
 # Define empty graph to be populated upon selection
 fig = go.Figure(data=[])
-
 
 app = dash.Dash()
 app.layout = html.Div([
@@ -78,12 +77,13 @@ app.layout = html.Div([
         options=dropdown_options[dropdown_startidx:dropdown_endidx],
         value=dropdown_options[dropdown_startidx]['value']
     ),
-    #html.Div(id='dropdown_output_container'),
+    # html.Div(id='dropdown_output_container'),
     dcc.Graph(id="peak_scatterplot",
               figure=fig,
               style={'width': '100%', 'height': '100vh'}
               ),
 ])
+
 
 ########## CALLBACK DEFINITIONS ##########
 @app.callback(
@@ -95,6 +95,8 @@ def update_indicies(start_index, end_index):
     dropdown_startidx = int(start_index)
     dropdown_endidx = int(end_index)
     return dropdown_options[dropdown_startidx:dropdown_endidx]
+
+
 @app.callback(
     dash.dependencies.Output('peak_scatterplot', 'figure'),
     [dash.dependencies.Input('dropdown_options', 'value')])
@@ -102,8 +104,8 @@ def update_output(value):
     # Plot the graph w/ trails here
     # Lookup the peptide from the dropdown options
     result_entry = list(filter(lambda x: x['value'] == value, dropdown_options))[0]
-    #print(value)
-    #print(result_entry)
+    # print(value)
+    # print(result_entry)
     peptide_mass = float(mass.fast_mass(result_entry['label']))
     mz2 = (peptide_mass + 2 * 1.00727647) / 2
     iso_window = (np.max(np.where(np.array(list(iso_dict.keys())) < mz2)) + 1)
@@ -133,13 +135,19 @@ def update_output(value):
         xaxis_title='RetentionTime (min)',
         yaxis_title='m/z',
         zaxis_title='Intensity',
+        uirevision='STATIC'
+    ))
+    """
         xaxis_range=[min(trail_df_subset['rts'].astype(float)), max(trail_df_subset['rts'].astype(float))],
         yaxis_range=[min(trail_df_subset['mzs'].astype(float)), max(trail_df_subset['mzs'].astype(float))],
         zaxis_range=[min(trail_df_subset['ints'].astype(float)), max(trail_df_subset['ints'].astype(float))],
         uirevision='STATIC'  # Prevent graph update
     ))
-    #return fig
+    """
+    # return fig
     return generate_traces_from_json(xic_row, fig)
+
+
 if __name__ == '__main__':
     app.run_server(
         host='0.0.0.0',
